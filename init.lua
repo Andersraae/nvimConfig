@@ -34,19 +34,31 @@ vim.opt.autoindent = true
 require("lazy").setup({
     "neovim/nvim-lspconfig",
     "folke/trouble.nvim",
-    "nvim-telescope/telescope.nvim",
     {
-        "folke/tokyonight.nvim",
-        lazy = false,
-        priority = 1000, -- load before other plugins
+        "nvim-telescope/telescope.nvim",
         config = function()
-            vim.cmd("colorscheme tokyonight")
+            require("telescope").setup({
+                defaults = {
+                    hidden = true,
+                },
+            })
         end,
-    },
+    }, {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000, -- load before other plugins
+    config = function()
+        vim.cmd("colorscheme tokyonight")
+    end,
+},
     {
         "stevearc/oil.nvim",
         config = function()
-            require("oil").setup()
+            require("oil").setup({
+                view_options = {
+                    show_hidden = true,
+                },
+            })
             vim.keymap.set('n', '-', ':Oil<CR>')
         end,
     },
@@ -61,23 +73,6 @@ require("lazy").setup({
         "windwp/nvim-autopairs",
         config = function()
             require("nvim-autopairs").setup()
-        end,
-    },
-    {
-        "L3MON4D3/LuaSnip",
-        config = function()
-            local ls = require("luasnip")
-            local s = ls.snippet
-            local t = ls.text_node
-            local i = ls.insert_node
-
-            ls.add_snippets("php", {
-                s("deb", {
-                    t("$this->logger->debug("),
-                    i(1),
-                    t(");"),
-                }),
-            })
         end,
     },
     {
@@ -154,7 +149,7 @@ require("lazy").setup({
                     typescriptreact = { "prettier" },
                 },
                 format_on_save = {
-                    timeout_ms = 2000,
+                    timeout_ms = 3000,
                     lsp_fallback = true,
                 },
             })
@@ -193,18 +188,21 @@ vim.lsp.config("lua_ls", {
     },
 })
 
-require("oil").setup({
-    keymaps = {
-        ["q"] = "actions.close",
-    },
-})
 
 vim.lsp.enable({ "intelephense", "ts_ls", "omnisharp", "lua_ls" })
 
 -- Keymaps
 local builtin = require('telescope.builtin')
-vim.keymap.set('n', '<leader>ff', builtin.find_files)
-vim.keymap.set('n', '<leader>fg', builtin.live_grep)
+vim.keymap.set('n', '<leader>ff', function()
+    require('telescope.builtin').find_files({
+        find_command = { "rg", "--files", "--hidden", "--no-ignore", "--glob", "!**/.git/*", "--glob", "!**/node_modules/*", "--glob", "!**/vendor/*" }
+    })
+end)
+vim.keymap.set('n', '<leader>fg', function()
+    require('telescope.builtin').live_grep({
+        additional_args = { "--hidden", "--no-ignore", "--glob", "!**/.git/*", "--glob", "!**/node_modules/*", "--glob", "!**/vendor/*" }
+    })
+end)
 vim.keymap.set('n', '<leader>fb', builtin.buffers)
 vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float)
 vim.keymap.set('n', '<leader>h', ':noh<CR>')
